@@ -1,0 +1,15 @@
+- name: Install CloudWatch agent
+  apt:
+    name: amazon-cloudwatch-agent
+    state: present
+
+- name: Configure CloudWatch
+  template:
+    src: cloudwatch.json.j2
+    dest: /opt/aws/amazon-cloudwatch-agent/etc/cloudwatch-config.json
+
+- name: Start CloudWatch agent
+  service:
+    name: amazon-cloudwatch-agent
+    state: restarted
+    enabled: yes
