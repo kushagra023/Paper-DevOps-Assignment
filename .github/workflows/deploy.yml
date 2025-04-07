@@ -6,7 +6,7 @@ on:
 
 env:
   TF_VAR_public_key: ${{ secrets.AWS_PUBLIC_KEY }}
-  PRIVATE_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+  PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
 jobs:
   deploy:
@@ -94,10 +94,12 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${PRIVATE_KEY}" > ~/.ssh/id_rsa
+          echo "${PRIVATE_KEY}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ steps.get-ip.outputs.IP }} >> ~/.ssh/known_hosts
-
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+      
       - name: Wait for instance to be ready
         run: sleep 60
 
