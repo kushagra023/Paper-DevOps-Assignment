@@ -4,8 +4,8 @@ resource "aws_key_pair" "dev_key" {
 }
 
 resource "aws_security_group" "allow_ssh_http" {
-  name        = "allow_ssh_http"
-  description = "Allow SSH and HTTP"
+  name_prefix = "allow_ssh_http-"  # Unique, avoids duplicate errors
+  description = "Allow SSH, HTTP, and HTTPS"
 
   ingress {
     from_port   = 22
@@ -15,15 +15,15 @@ resource "aws_security_group" "allow_ssh_http" {
   }
 
   ingress {
-  from_port   = 443
-  to_port     = 443
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
-}
-
-  ingress {
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -37,10 +37,10 @@ resource "aws_security_group" "allow_ssh_http" {
 }
 
 resource "aws_instance" "web" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  key_name      = aws_key_pair.dev_key.key_name
-  security_groups = [aws_security_group.allow_ssh_http.name]
+  ami             = var.ami_id
+  instance_type   = var.instance_type
+  key_name        = aws_key_pair.dev_key.key_name
+  vpc_security_group_ids = [aws_security_group.allow_ssh_http.id] # Use SG ID instead of name
 
   tags = {
     Name = "PaperSocialApp"
