@@ -102,10 +102,18 @@
           - python3-docker
         state: present
 
-    - name: Copy website code to remote host
+    - name: Create build context directory on remote host
+      file:
+        path: /home/{{ ansible_user }}/build_context
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Copy website code to build context directory
       copy:
         src: ../website/
-        dest: /home/{{ ansible_user }}/website/
+        dest: /home/{{ ansible_user }}/build_context/website/
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
         mode: '0755'
@@ -114,7 +122,7 @@
       community.docker.docker_image:
         name: papersocial-web
         build:
-          path: /home/{{ ansible_user }}/website
+          path: /home/{{ ansible_user }}/build_context
         source: build
         force_source: true
         force_tag: true
