@@ -1,7 +1,13 @@
 resource "aws_key_pair" "dev_key" {
   key_name   = "dev_key"
   public_key = var.public_key
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [public_key]
+  }
 }
+
 
 resource "aws_security_group" "allow_ssh_http" {
   name_prefix = "allow_ssh_http-"  # Unique, avoids duplicate errors
