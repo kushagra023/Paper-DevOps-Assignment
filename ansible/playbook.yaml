@@ -122,7 +122,7 @@
       community.docker.docker_image:
         name: papersocial-web
         build:
-          path: /home/{{ ansible_user }}/build_context
+          path: /home/{{ ansible_user }}/build_context/website/
         source: build
         force_source: true
         force_tag: true
