@@ -37,23 +37,37 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
+      - name: Cleanup Previous EC2 and SG (Optional)
+        run: |
+          echo "Checking for existing security group..."
+          GROUP_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=allow_ssh_http --query "SecurityGroups[0].GroupId" --output text)
+
+          if [ "$GROUP_ID" != "None" ]; then
+            echo "Found SG: $GROUP_ID. Checking for EC2 dependencies..."
+
+            INSTANCE_IDS=$(aws ec2 describe-instances \
+              --filters Name=instance.group-id,Values=$GROUP_ID \
+              --query "Reservations[].Instances[].InstanceId" --output text)
+
+            if [ -n "$INSTANCE_IDS" ]; then
+              echo "Terminating instances: $INSTANCE_IDS"
+              aws ec2 terminate-instances --instance-ids $INSTANCE_IDS
+              echo "Waiting for instances to terminate..."
+              aws ec2 wait instance-terminated --instance-ids $INSTANCE_IDS
+            fi
+
+            echo "Deleting security group: $GROUP_ID"
+            aws ec2 delete-security-group --group-id "$GROUP_ID"
+          else
+            echo "No existing SG with name 'allow_ssh_http'"
+          fi
+
       - name: Terraform Init
         run: terraform -chdir=terraform init
 
       # Optional: full destroy before reapply (comment out if you want to keep infra)
       - name: Terraform Destroy
         run: terraform -chdir=terraform destroy -auto-approve || true
-
-      # Cleanup manually conflicting resources like duplicate SG
-      - name: Cleanup Existing Security Group (if exists)
-        run: |
-          GROUP_ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=allow_ssh_http --query "SecurityGroups[0].GroupId" --output text)
-          if [ "$GROUP_ID" != "None" ]; then
-            echo "Deleting conflicting Security Group: $GROUP_ID"
-            aws ec2 delete-security-group --group-id "$GROUP_ID"
-          else
-            echo "No existing SG with name 'allow_ssh_http'"
-          fi
 
       - name: Terraform Plan
         run: terraform -chdir=terraform plan -var-file="terraform.tfvars"
