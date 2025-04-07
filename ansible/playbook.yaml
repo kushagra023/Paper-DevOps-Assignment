@@ -5,16 +5,22 @@
 
   tasks:
     - name: Ensure Docker is installed
-      apt:
-        name: docker.io
+      yum:
+        name: docker
         state: present
-        update_cache: yes
 
     - name: Ensure Docker service is running
       service:
         name: docker
         state: started
         enabled: true
+
+    - name: Install required Python Docker packages
+      pip:
+        name: 
+          - docker
+          - docker-compose
+        executable: pip3
 
     - name: Build Website Docker Image
       community.docker.docker_image:
