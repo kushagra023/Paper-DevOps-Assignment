@@ -102,11 +102,19 @@
           - python3-docker
         state: present
 
+    - name: Copy website code to remote host
+      copy:
+        src: ./website/
+        dest: /opt/website/
+        owner: root
+        group: root
+        mode: '0755'
+
     - name: Build Website Docker Image
       community.docker.docker_image:
         name: papersocial-web
         build:
-          path: ../website
+          path: /opt/website
         source: build
         force_source: true
         force_tag: true
