@@ -4,8 +4,49 @@
   become: true
 
   tasks:
+    - name: Configure Docker CE repositories
+      block:
+        - name: Install prerequisites (RedHat)
+          yum:
+            name: yum-utils
+            state: present
+          when: ansible_os_family == 'RedHat'
+
+        - name: Add Docker CE repository (RedHat)
+          yum_repository:
+            name: docker-ce
+            description: Docker CE Stable
+            baseurl: https://download.docker.com/linux/centos/{{ ansible_distribution_major_version }}/$basearch/stable
+            gpgcheck: yes
+            gpgkey: https://download.docker.com/linux/centos/gpg
+            enabled: yes
+          when: ansible_os_family == 'RedHat'
+
+        - name: Install prerequisites (Debian)
+          apt:
+            name:
+              - apt-transport-https
+              - ca-certificates
+              - curl
+              - software-properties-common
+            state: present
+            update_cache: yes
+          when: ansible_os_family == 'Debian'
+
+        - name: Add Docker GPG key (Debian)
+          apt_key:
+            url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+            state: present
+          when: ansible_os_family == 'Debian'
+
+        - name: Add Docker repository (Debian)
+          apt_repository:
+            repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+            state: present
+          when: ansible_os_family == 'Debian'
+
     - name: Ensure Docker is installed
-      package:  # Changed from yum to package for multi-OS compatibility
+      package:
         name: docker-ce
         state: present
 
@@ -23,7 +64,7 @@
         state: present
 
     - name: Install required Python Docker packages
-      pip:  # Removed problematic --break-system-packages argument
+      pip:
         name: 
           - docker
           - docker-compose
