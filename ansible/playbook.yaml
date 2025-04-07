@@ -26,7 +26,6 @@
       pip:
         name:
           - docker
-          - docker-compose
         executable: pip3
 
     - name: Build Website Docker Image
