@@ -5,8 +5,8 @@
 
   tasks:
     - name: Ensure Docker is installed
-      yum:
-        name: docker
+      package:  # Changed from yum to package for multi-OS compatibility
+        name: docker-ce
         state: present
 
     - name: Ensure Docker service is running
@@ -16,17 +16,18 @@
         enabled: true
 
     - name: Install Python3 and pip
-      yum:
+      package:
         name:
           - python3
           - python3-pip
         state: present
 
     - name: Install required Python Docker packages
-      pip:
-        name: docker
+      pip:  # Removed problematic --break-system-packages argument
+        name: 
+          - docker
+          - docker-compose
         executable: pip3
-        extra_args: --break-system-packages
 
     - name: Build Website Docker Image
       community.docker.docker_image:
