@@ -72,6 +72,11 @@ jobs:
       - name: Terraform Plan
         run: terraform -chdir=terraform plan -var-file="terraform.tfvars"
 
+      - name: Import existing Key Pair (if not already in state)
+        run: |
+          terraform -chdir=terraform state show aws_key_pair.dev_key || terraform -chdir=terraform import aws_key_pair.dev_key dev_key
+
+
       - name: Terraform Apply
         run: terraform -chdir=terraform apply -auto-approve -var-file="terraform.tfvars"
 
