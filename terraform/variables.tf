@@ -19,5 +19,5 @@ variable "public_key" {
 
 variable "ami_id" {
   description = "Ubuntu 22.04 LTS in ap-south-1"
-  default     = "ami-03bb6d83c60fc5f7c"
+  default     = "ami-02a2af70a66af6dfb"
 }
