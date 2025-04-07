@@ -6,6 +6,7 @@ on:
 
 env:
   TF_VAR_public_key: ${{ secrets.AWS_PUBLIC_KEY }}
+  PRIVATE_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
 
 jobs:
   deploy:
