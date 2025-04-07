@@ -88,7 +88,7 @@ jobs:
 
       - name: Configure Ansible Inventory
         run: |
-          echo "${{ steps.get-ip.outputs.IP }} ansible_user=ubuntu" > ansible/inventory.ini
+          echo "${{ steps.get-ip.outputs.IP }} ansible_user=ec2-user" > ansible/inventory.ini
 
       - name: Setup SSH Key
         run: |
