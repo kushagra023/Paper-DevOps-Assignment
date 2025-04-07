@@ -1,7 +1,8 @@
 ---
-- name: Deploy Papersocial Website with Docker
+- name: Deploy Papersocial Website with Docker (RedHat)
   hosts: all
   become: true
+  gather_facts: yes
 
   vars:
     docker_packages:
@@ -13,63 +14,31 @@
 
   tasks:
 
-    - name: Install prerequisites (RedHat)
-      yum:
-        name: yum-utils
+    - name: Install required utilities (RedHat)
+      package:
+        name: "{{ 'dnf-plugins-core' if ansible_distribution_major_version | int >= 8 else 'yum-utils' }}"
         state: present
       when: ansible_os_family == 'RedHat'
 
     - name: Add Docker CE repository (RedHat)
-      ansible.builtin.shell: |
-        yum-config-manager --add-repo https://download.docker.com/linux/centos/{{ ansible_distribution_major_version }}/$basearch/stable
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
       when: ansible_os_family == 'RedHat'
 
-    - name: Import Docker GPG key (RedHat)
-      rpm_key:
-        state: present
-        key: https://download.docker.com/linux/centos/gpg
+    - name: Clean yum cache
+      command: yum clean all
       when: ansible_os_family == 'RedHat'
 
-    - name: Install Docker packages (RedHat)
+    - name: Refresh yum metadata
+      command: yum makecache
+      when: ansible_os_family == 'RedHat'
+
+    - name: Install Docker packages
       yum:
         name: "{{ docker_packages }}"
         state: present
       when: ansible_os_family == 'RedHat'
-
-    - name: Install prerequisites (Debian)
-      apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - software-properties-common
-        state: present
-        update_cache: yes
-      when: ansible_os_family == 'Debian'
-
-    - name: Add Docker GPG key (Debian)
-      apt_key:
-        url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
-        state: present
-      when: ansible_os_family == 'Debian'
-
-    - name: Add Docker repository (Debian)
-      apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
-        state: present
-      when: ansible_os_family == 'Debian'
-
-    - name: Install Docker packages (Debian)
-      apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-buildx-plugin
-          - docker-compose-plugin
-        state: present
-        update_cache: yes
-      when: ansible_os_family == 'Debian'
 
     - name: Ensure Docker service is running and enabled
       service:
