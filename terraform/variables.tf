@@ -11,11 +11,9 @@ variable "key_name" {
   type        = string
 }
 
-variable "public_key" {}
-
-resource "aws_key_pair" "dev_key" {
-  key_name   = "dev_key"
-  public_key = var.public_key
+variable "public_key" {
+  description = "The public key to use for the AWS key pair"
+  type        = string
 }
 
 
