@@ -66,8 +66,7 @@ jobs:
       - name: Terraform Init
         run: terraform -chdir=terraform init
 
-      # Optional: full destroy before reapply (comment out if you want to keep infra)
-      - name: Terraform Destroy
+      - name: Terraform Destroy (optional)
         run: terraform -chdir=terraform destroy -auto-approve || true
 
       - name: Terraform Plan
@@ -76,7 +75,6 @@ jobs:
       - name: Import existing Key Pair (if not already in state)
         run: |
           terraform -chdir=terraform state show aws_key_pair.dev_key || terraform -chdir=terraform import aws_key_pair.dev_key dev_key
-
 
       - name: Terraform Apply
         run: terraform -chdir=terraform apply -auto-approve -var-file="terraform.tfvars"
@@ -90,16 +88,21 @@ jobs:
         run: |
           echo "${{ steps.get-ip.outputs.IP }} ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa" > ansible/inventory.ini
 
-
       - name: Setup SSH Key
         run: |
+          set -x
           mkdir -p ~/.ssh
           printf "%s" "$PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ steps.get-ip.outputs.IP }} >> ~/.ssh/known_hosts
+
+          for i in {1..5}; do
+            ssh-keyscan -H ${{ steps.get-ip.outputs.IP }} >> ~/.ssh/known_hosts && break
+            echo "Retrying ssh-keyscan..."
+            sleep 10
+          done
         env:
           PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-      
+
       - name: Wait for instance to be ready
         run: sleep 60
 
