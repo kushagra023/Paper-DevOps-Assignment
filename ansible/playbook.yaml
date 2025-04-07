@@ -104,17 +104,17 @@
 
     - name: Copy website code to remote host
       copy:
-        src: ./website/
-        dest: /opt/website/
-        owner: root
-        group: root
+        src: ../website/
+        dest: /home/{{ ansible_user }}/website/
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: '0755'
 
     - name: Build Website Docker Image
       community.docker.docker_image:
         name: papersocial-web
         build:
-          path: /opt/website
+          path: /home/{{ ansible_user }}/website
         source: build
         force_source: true
         force_tag: true
