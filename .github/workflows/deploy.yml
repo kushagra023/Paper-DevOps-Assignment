@@ -4,6 +4,9 @@ on:
   push:
     branches: [master]
 
+env:
+  TF_VAR_public_key: ${{ secrets.AWS_PUBLIC_KEY }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
