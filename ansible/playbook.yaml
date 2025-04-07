@@ -54,6 +54,15 @@
         filename: docker
         state: present
 
+    - name: Install build dependencies for Python packages
+      apt:
+        name:
+          - python3-dev
+          - libssl-dev
+          - libffi-dev
+          - build-essential
+        state: present
+        
     - name: Install Docker packages
       apt:
         name: "{{ docker_packages }}"
@@ -91,7 +100,6 @@
       pip:
         name:
           - docker
-          - docker-compose
         executable: pip3
 
     - name: Build Website Docker Image
