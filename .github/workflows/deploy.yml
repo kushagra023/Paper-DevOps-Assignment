@@ -43,16 +43,32 @@ jobs:
       - name: Terraform Destroy (optional, cleanup before reapply)
         run: terraform -chdir=terraform destroy -auto-approve
 
-      - name: Terraform Plan
-        run: terraform -chdir=terraform plan -var-file="terraform.tfvars"
-
       - name: Clean up AWS resources
         run: |
-          aws ec2 delete-key-pair --key-name dev_key || true
-          sg_id=$(aws ec2 describe-security-groups --filters Name=group-name,Values=allow_ssh_http --query "SecurityGroups[*].GroupId" --output text)
+          # Terminate EC2 instance if it exists
+          instance_id=$(aws ec2 describe-instances \
+            --filters Name=tag:Name,Values=dev-instance \
+            --query "Reservations[*].Instances[*].InstanceId" --output text)
+
+          if [ -n "$instance_id" ]; then
+            echo "Terminating instance: $instance_id"
+            aws ec2 terminate-instances --instance-ids "$instance_id"
+            echo "Waiting for instance to terminate..."
+            aws ec2 wait instance-terminated --instance-ids "$instance_id"
+          fi
+
+          # Delete security group if it exists
+          sg_id=$(aws ec2 describe-security-groups \
+            --filters Name=group-name,Values=allow_ssh_http \
+            --query "SecurityGroups[*].GroupId" --output text)
+
           if [ -n "$sg_id" ]; then
             aws ec2 delete-security-group --group-id "$sg_id"
+            echo "Deleted security group: $sg_id"
           fi
+
+      - name: Terraform Plan
+        run: terraform -chdir=terraform plan -var-file="terraform.tfvars"
 
       - name: Terraform Apply
         run: terraform -chdir=terraform apply -auto-approve -var-file="terraform.tfvars"
