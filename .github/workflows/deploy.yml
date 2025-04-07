@@ -36,7 +36,7 @@ jobs:
         run: echo "${{ steps.get-ip.outputs.IP }}" ansible_user=ubuntu > ansible/inventory.ini
 
       - name: Run Ansible
-        uses: ansible/ansible-action@v2
+        uses: ansible/ansible-action@v1
         with:
           playbook: ansible/playbook.yaml
           inventory: ansible/inventory.ini
